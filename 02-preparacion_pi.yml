@@ -1,0 +1,85 @@
+---
+- name: Configura dependencia para instalación de servicio de Siguca en una Raspberry Pi
+  hosts: all
+  strategy: free
+  tasks:
+  - name: Define un hostname para equipo fisico
+    hostname:
+      name: "{{ hostname }}"
+    become: yes
+  - name: Archivo de wpa supplicant
+    copy:
+      src: files/wpa_supplicant.conf
+      dest: /etc/wpa_supplicant/wpa_supplicant.conf
+      mode: 0600
+      owner: root
+      group: root
+    become: yes
+  - name: Plantilla de jinja para archivo interfaces
+    template:
+      src: files/interfaces.j2
+      dest: /etc/network/interfaces
+      mode: 0644
+      owner: root
+      group: root
+    become: yes
+  - name: Crea servicio de siguca-python
+    copy:
+      src: files/siguca-python.service
+      dest: /etc/systemd/system/
+      mode: 0644
+      owner: root
+      group: root
+    become: yes
+  - name: Crea usuario greencore con grupos necesarios
+    user:
+      name: greencore
+      shell: /bin/bash
+      groups: sudo,dialout,adm
+      append: yes
+    become: yes
+  - name: Instala paquetes requeridos para esta receta
+    apt: 
+      name: "{{ item }}"
+      state: installed
+    with_items:
+      - python-pip
+      - python-imaging
+      - unclutter
+      - snmpd
+      - python
+      - python-tk
+      - python3-tk
+      - python-serial
+      - python-rpi.gpio
+      - python3-rpi.gpio
+      - minicom
+      - mongodb
+      - python-gridfs
+      - nfs-common
+      - vim
+    become: yes
+  - name: set timezone to America/CR
+    timezone:
+      name: America/Costa_Rica
+    become: yes
+  - name: Starts and enable services
+    service:
+      name: "{{ item }}"
+      enabled: yes
+      state: started
+    with_items:
+      - snmpd.service
+      - nfs-common.service
+      - siguca-python.service
+    become: yes
+  - name: Starts and enable services
+    service:
+      name: "{{ item }}"
+      enabled: yes
+      state: stopped
+    with_items:
+      - triggerhappy.service
+      - dhcpcd.service
+    become: yes
+
