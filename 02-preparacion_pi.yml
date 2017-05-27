@@ -72,14 +72,17 @@
       - snmpd.service
       - nfs-common.service
       - siguca-python.service
+      - mongodb.service
     become: yes
-  - name: Starts and enable services
+  - name: Stops and disables services
     service:
       name: "{{ item }}"
-      enabled: yes
+      enabled: no
       state: stopped
     with_items:
       - triggerhappy.service
       - dhcpcd.service
+      - bluetooth.service
+      - hciuart.service
     become: yes
 
